@@ -31,9 +31,16 @@ def reqparse(l):
         l = l[2:]           # strip off /W
         req.verbose = True
         print "verbose"
+    # allow leading spaces
     m = re.match('\s*([^@]+)', l)
     if (m is not None):
         req.user = m.group(1)
+    # pick up @host@host@host
+    # add to hostlist
+    # if there is a hostlist, verify there is also a user.
+    m = re.match('(@[^@]+)+', l)
+    if (m is not None):
+        print "hostlist", m.group(1)
     print "User", req.user
     return req
 
@@ -53,9 +60,7 @@ while True:
           print "General"
       else:
           print "specific"
-  # Q1= nothing, space then username
 
-  # Q2 = space, username, hostname(multiple as wanted)
 
   # if parse fails, return None
 
