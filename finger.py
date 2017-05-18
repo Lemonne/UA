@@ -3,7 +3,7 @@
 import socket
 import re
 
-PORT = 8089                 # testing
+PORT = 8089
 
 # open listen socket
 serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -16,10 +16,10 @@ serversocket.listen(5) # become a server socket, maximum 5 connections
 # return line for parsing with CR/LF removed or None
 def getreq(c):
     l = c.recv(2048)
-    sz = len(l)
-    if l[sz-2:] != "\r\n":
+    size = len(l)
+    if l[size-2:] != "\r\n":
         return None
-    return l[:sz-2]
+    return l[:size-2]
 
 class userreq:
     def __init__(self):
@@ -39,9 +39,12 @@ def reqparse(l):
     # allow leading spaces, be liberal, allow trailing spaces.
     l = l.rstrip(' ')
     m = re.match('\s*([^@\s]+)', l)
+
     if (m is not None):
         req.user = m.group(1)
         l = l[m.end():]             # strip off user
+
+    # create the host groups
     while True:
         m = re.match('@([^@\s]+)', l)
         if (m is None):
@@ -49,9 +52,6 @@ def reqparse(l):
         req.addhost(m.group(1))
         l = l[m.end():]
     if len(l) != 0:
-        return None
-    # if there is a hostlist, must have a user.
-    if req.hostlist is not None and req.user is None:
         return None
     return req
 
@@ -64,8 +64,9 @@ def user_lookup(req):
         data += "more details\n"
     return data
 
+# uses finger to send from last @host
 def forward(req):
-    nextHost = req.hostlist.pop(0)
+    nextHost = req.hostlist.pop()
     if req.verbose:
         data = '\W' + req.user
     else:
@@ -81,9 +82,10 @@ def finger(host, data):
     s.write(data)
     return s.recv(2048)
 
+# open a connection, parses string. separates requests
 while True:
-  c, addr = serversocket.accept()
-  print "connection from", addr
+  c, address = serversocket.accept()
+  print "connection from", address
   l = getreq(c)
   print "have", l
   r = reqparse(l)
